@@ -11,7 +11,7 @@ Roadmap lengkap: [ROADMAP.md](ROADMAP.md)
 |---|---|---|
 | 0 | Fondasi & Scaffolding | ✅ |
 | 1 | Data Layer | ✅ |
-| 2 | Auth Google SSO | ⬜ |
+| 2 | Auth Google SSO | ✅ |
 | 3 | Tiket via HTTP | ⬜ |
 | 4 | Fondasi WebSocket | ⬜ |
 | 5 | Chat Realtime | ⬜ |
@@ -31,6 +31,7 @@ Roadmap lengkap: [ROADMAP.md](ROADMAP.md)
 make up
 
 # 2. Backend  (http://localhost:8000)
+#    Login Google? lihat docs/GOOGLE-SETUP.md. Tanpa itu, pakai panel Dev login.
 make install-be        # sekali saja
 make be
 

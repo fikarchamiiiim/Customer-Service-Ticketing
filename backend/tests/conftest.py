@@ -5,9 +5,9 @@ Strategi:
   2. Skema dibuat lewat ALEMBIC (bukan create_all) — supaya migrasi ikut teruji.
   3. Tiap test dibungkus transaksi yang DI-ROLLBACK — test tidak saling mengotori.
 
-Catatan soal scope: semua fixture di sini ber-scope "function" (default) supaya
-event loop-nya selalu sama dengan test. Persiapan database yang mahal (drop +
-create + alembic) dijalankan sekali saja lewat flag modul _prepared.
+Catatan scope: semua fixture ber-scope "function" supaya event loop-nya selalu
+sama dengan test. Persiapan database yang mahal dijalankan sekali lewat flag
+modul _prepared.
 """
 
 import asyncio
@@ -15,12 +15,12 @@ import os
 import subprocess
 from pathlib import Path
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
+from app.db.session import get_db
 
 TEST_DB = "ticketing_test"
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -59,6 +59,15 @@ async def _prepare_database() -> None:
     await asyncio.to_thread(_run_alembic, "upgrade", "head")
 
 
+class _DbHandle:
+    """Sesi + data seed yang siap dipakai test."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.agent_email = "agent1@example.com"
+        self.customer_email = "customer1@example.com"
+
+
 @pytest_asyncio.fixture
 async def db() -> AsyncSession:
     """Sesi yang selalu di-rollback di akhir test."""
@@ -81,3 +90,22 @@ async def db() -> AsyncSession:
         await transaction.rollback()
         await connection.close()
         await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def db_override(db):
+    """Timpa dependency get_db supaya HTTP test memakai transaksi yang sama.
+
+    Dengan begitu data yang dibuat lewat request API langsung terlihat oleh test,
+    dan semuanya tetap di-rollback di akhir.
+    """
+    from app.main import app
+
+    async def _get_db_override():
+        yield db
+
+    app.dependency_overrides[get_db] = _get_db_override
+    try:
+        yield db
+    finally:
+        app.dependency_overrides.pop(get_db, None)

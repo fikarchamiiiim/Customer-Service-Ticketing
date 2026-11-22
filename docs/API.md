@@ -25,7 +25,15 @@ Kode yang dipakai: `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_ERROR`,
 | POST | `/auth/google` | – | `{id_token}` → set cookie, balikan `user` |
 | POST | `/auth/dev-login` | – (hanya `DEV_AUTH=true`) | `{email}` → set cookie |
 | GET | `/me` | ✔ | `user` |
-| POST | `/auth/logout` | ✔ | hapus cookie |
+| POST | `/auth/logout` | ✔ | hapus cookie → 204 |
+| GET | `/dev/config` | – | `{dev_auth, google_enabled, session_cookie}` (hanya jika `DEV_AUTH=true`) |
+| GET | `/dev/agent-only` | ✔ agent | contoh endpoint ber-role, untuk menguji `require_role` |
+
+**Cookie sesi** (dipasang saat login):
+```
+Set-Cookie: session=<JWT>; HttpOnly; Max-Age=604800; Path=/; SameSite=lax
+```
+`Secure` ditambahkan otomatis kalau `COOKIE_SECURE=true` (produksi/HTTPS).
 
 ### Tickets
 | Method | Path | Auth | Keterangan |

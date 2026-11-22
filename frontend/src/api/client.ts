@@ -4,13 +4,23 @@
 export class ApiError extends Error {
   status: number
   code: string
+  details: unknown
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.details = details
   }
+
+  get isUnauthorized() {
+    return this.status === 401
+  }
+}
+
+type ErrorEnvelope = {
+  error?: { code?: string; message?: string; details?: unknown }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,18 +30,28 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       'Content-Type': 'application/json',
       ...(init?.headers ?? {}),
     },
-    credentials: 'include', // cookie sesi ikut terkirim (dipakai mulai Step 2)
+    credentials: 'include', // cookie sesi ikut terkirim
   })
 
+  if (res.status === 204) return undefined as T
+
   const text = await res.text()
-  const body = text ? JSON.parse(text) : null
+  let body: unknown = null
+  try {
+    body = text ? JSON.parse(text) : null
+  } catch {
+    body = null
+  }
 
   if (!res.ok) {
-    const err = body?.error ?? {}
+    // Backend mengirim {"error": {"code","message","details"}}.
+    // Kalau bentuknya lain (mis. proxy error HTML), tetap jangan crash.
+    const err = (body as ErrorEnvelope | null)?.error ?? {}
     throw new ApiError(
       res.status,
       err.code ?? `HTTP_${res.status}`,
       err.message ?? `Request gagal (${res.status})`,
+      err.details,
     )
   }
 
