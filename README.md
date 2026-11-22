@@ -12,11 +12,17 @@ Roadmap lengkap: [ROADMAP.md](ROADMAP.md)
 | 0 | Fondasi & Scaffolding | ✅ |
 | 1 | Data Layer | ✅ |
 | 2 | Auth Google SSO | ✅ |
-| 3 | Tiket via HTTP | ⬜ |
+| 3 | Tiket via HTTP | ✅ |
 | 4 | Fondasi WebSocket | ⬜ |
 | 5 | Chat Realtime | ⬜ |
 | 6 | Notifikasi & Presence | ⬜ |
 | 7 | Hardening & Docs | ⬜ |
+
+## Alur singkat
+
+1. **Customer** login → `/tickets` → "Tiket baru" → mengisi subjek + deskripsi
+2. **Agent** login → `/tickets` (scope=all) → filter status/assignee → buka tiket → ambil tiket → balas / internal note → ubah status
+3. Status mengikuti state machine: `open → in_progress → resolved → closed` (+ reopen dari `resolved`)
 
 ## Prasyarat
 

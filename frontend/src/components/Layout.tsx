@@ -83,7 +83,7 @@ export function Layout() {
       </main>
 
       <footer className="border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-        Step 2 — auth aktif. Fitur tiket menyusul di Step 3.
+        Step 3 — tiket aktif (HTTP). Realtime menyusul di Step 4-5.
       </footer>
     </div>
   )

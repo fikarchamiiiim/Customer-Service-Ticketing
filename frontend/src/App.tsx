@@ -5,6 +5,8 @@ import { HealthPage } from './pages/HealthPage'
 import { LoginPage } from './pages/LoginPage'
 import { AgentPage } from './pages/AgentPage'
 import { TicketsPage } from './pages/TicketsPage'
+import { TicketNewPage } from './pages/TicketNewPage'
+import { TicketDetailPage } from './pages/TicketDetailPage'
 
 export default function App() {
   return (
@@ -19,6 +21,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <TicketsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/new"
+          element={
+            <ProtectedRoute>
+              <TicketNewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/:id"
+          element={
+            <ProtectedRoute>
+              <TicketDetailPage />
             </ProtectedRoute>
           }
         />
