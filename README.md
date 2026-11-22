@@ -10,7 +10,7 @@ Roadmap lengkap: [ROADMAP.md](ROADMAP.md)
 | Step | Judul | Status |
 |---|---|---|
 | 0 | Fondasi & Scaffolding | ✅ |
-| 1 | Data Layer | ⬜ |
+| 1 | Data Layer | ✅ |
 | 2 | Auth Google SSO | ⬜ |
 | 3 | Tiket via HTTP | ⬜ |
 | 4 | Fondasi WebSocket | ⬜ |
@@ -49,7 +49,11 @@ Buka http://localhost:5173/health → harus tampil **API: ok / DB: ok**.
 | `make psql` | shell psql ke database |
 | `make db-reset` | hapus volume DB & buat ulang (data hilang) |
 | `make build` | typecheck + build frontend |
-| `make test` | jalankan pytest |
+| `make test` | jalankan pytest (DB test terpisah, auto rollback) |
+| `make migrate` | `alembic upgrade head` |
+| `make seed` | isi data contoh (aman diulang) |
+| `make revision m="tambah tabel x"` | buat migrasi baru dari selisih model |
+| `make reset-all` | hapus DB → migrasi → seed (mulai bersih) |
 
 ## Struktur
 
@@ -57,7 +61,8 @@ Buka http://localhost:5173/health → harus tampil **API: ok / DB: ok**.
 backend/   FastAPI (app/, venv/.venv)
 frontend/  React + Vite
 infra/     docker-compose.yml
-docs/      arsitektur, data model, kontrak API
+docs/      arsitektur, data model, kontrak API, flow per step
+           (mulai dari docs/FLOW-STEP-0.md)
 prompts/   prompt per step
 ```
 
