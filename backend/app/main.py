@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, dev, health
+from app.api.v1 import auth, dev, health, tickets
 from app.config import settings
 from app.db.session import engine
 from app.errors import register_error_handlers
@@ -42,6 +42,7 @@ register_error_handlers(app)
 
 app.include_router(health.router, prefix=settings.api_v1_prefix)
 app.include_router(auth.router, prefix=settings.api_v1_prefix)
+app.include_router(tickets.router, prefix=settings.api_v1_prefix)
 if settings.dev_auth:
     # Router dev hanya didaftarkan kalau DEV_AUTH=true -> endpoint benar-benar tidak ada.
     app.include_router(dev.router, prefix=settings.api_v1_prefix)

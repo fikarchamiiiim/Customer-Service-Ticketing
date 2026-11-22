@@ -109,3 +109,32 @@ async def db_override(db):
         yield db
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+
+@pytest_asyncio.fixture
+async def client(db_override):
+    """HTTP client yang memakai sesi DB test (semua perubahan di-rollback)."""
+    import httpx
+
+    from app.main import app
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c
+
+
+@pytest_asyncio.fixture
+async def login(client):
+    """Helper: login via dev-login dan kembalikan user JSON-nya.
+
+    Cookie disimpan DI CLIENT, jadi client yang sama mewakili satu user.
+    Untuk dua user sekaligus, buat dua client (lihat fixture client2).
+    """
+
+    async def _login(email: str) -> dict:
+        resp = await client.post("/api/v1/auth/dev-login", json={"email": email})
+        assert resp.status_code == 200, resp.text
+        return resp.json()
+
+    return _login

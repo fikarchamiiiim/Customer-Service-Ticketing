@@ -1,10 +1,8 @@
 """Test autentikasi: token, cookie, RBAC, dan perilaku dev-login."""
 
-import httpx
 import pytest
 
 from app.config import settings
-from app.main import app
 from app.models.core import User
 from app.models.enums import UserRole
 from app.security import create_session_token, decode_session_token
@@ -57,12 +55,6 @@ def test_session_token_rejects_expired(monkeypatch):
 # --------------------------------------------------------------------------
 # Test lewat HTTP (ASGI transport -> tanpa server nyata)
 # --------------------------------------------------------------------------
-
-@pytest.fixture
-def client(db_override):
-    transport = httpx.ASGITransport(app=app)
-    return httpx.AsyncClient(transport=transport, base_url="http://test")
-
 
 async def test_me_without_cookie_returns_401(client):
     resp = await client.get("/api/v1/me")
@@ -143,7 +135,10 @@ async def test_dev_login_disabled_when_dev_auth_false(client, monkeypatch):
     assert resp.status_code == 404
 
 
-async def test_google_login_without_client_id_returns_500(client):
+async def test_google_login_without_client_id_returns_500(client, monkeypatch):
+    # .env bisa saja sudah berisi Client ID (mis. saat kamu setup Google),
+    # jadi test ini memaksa nilainya kosong alih-alih bergantung pada isi .env.
+    monkeypatch.setattr(settings, "google_client_id", "")
     resp = await client.post("/api/v1/auth/google", json={"id_token": "x" * 30})
     assert resp.status_code == 500
     assert resp.json()["error"]["code"] == "GOOGLE_NOT_CONFIGURED"
