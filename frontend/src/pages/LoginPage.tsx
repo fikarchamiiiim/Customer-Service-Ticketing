@@ -46,42 +46,64 @@ export function LoginPage() {
     if (user) navigate(from ?? homeFor(user.role), { replace: true })
   }, [user, from, navigate])
 
-  // Muat skrip Google Identity Services hanya kalau Google memang aktif.
+  // Muat skrip Google Identity Services, LALU inisialisasi.
+  // Dulu dipisah dua effect: efek init bisa jalan sebelum skrip selesai dimuat,
+  // window.google masih undefined, dan tombol tidak pernah muncul.
   useEffect(() => {
     if (!config?.google_enabled) return
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+    if (!clientId) {
+      setError('VITE_GOOGLE_CLIENT_ID belum diisi di frontend/.env.local — restart (make fe)')
+      return
+    }
+
+    let cancelled = false
+
+    function initGoogle() {
+      if (cancelled || !window.google) return
+      window.google.accounts.id.initialize({
+        client_id: clientId!,
+        callback: async ({ credential }) => {
+          setBusy(true)
+          setError(null)
+          try {
+            const u = await loginGoogle(credential)
+            navigate(from ?? homeFor(u.role), { replace: true })
+          } catch (err) {
+            setError(err instanceof ApiError ? err.message : 'Login Google gagal')
+          } finally {
+            setBusy(false)
+          }
+        },
+      })
+      const el = document.getElementById('gsi-button')
+      if (el) {
+        window.google.accounts.id.renderButton(el, {
+          theme: 'outline',
+          size: 'large',
+          width: 320,
+        })
+      }
+    }
+
+    if (window.google) {
+      initGoogle()
+      return
+    }
+
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
     script.async = true
     script.defer = true
+    script.onload = initGoogle
+    script.onerror = () => setError('Gagal memuat skrip Google. Cek koneksi / AdBlock.')
     document.head.appendChild(script)
+
     return () => {
+      cancelled = true
       script.remove()
     }
-  }, [config?.google_enabled])
-
-  useEffect(() => {
-    if (!config?.google_enabled || !window.google) return
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
-    if (!clientId) return
-
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async ({ credential }) => {
-        setBusy(true)
-        setError(null)
-        try {
-          const u = await loginGoogle(credential)
-          navigate(from ?? homeFor(u.role), { replace: true })
-        } catch (err) {
-          setError(err instanceof ApiError ? err.message : 'Login Google gagal')
-        } finally {
-          setBusy(false)
-        }
-      },
-    })
-
-    const el = document.getElementById('gsi-button')
-    if (el) window.google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: 320 })
   }, [config?.google_enabled, loginGoogle, navigate, from])
 
   async function handleDevLogin(email: string) {
